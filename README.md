@@ -59,7 +59,7 @@ Error while processing /home/yunlong/llvm/llvm_release/helloworld.c.
 >The error is not important, because we parse the current file's AST don't need include files. That also means you can extract function prototype with a separated file, although it include some relevant files.
 
 ## Output file
-The default outfile is `prototype.result` which memorys the output.
+The default outfile is `prototype.result` which records the output.
 And you can see that the output format is json,so that you can load this file easily.
 
 ## Notice
@@ -67,9 +67,9 @@ I have tried servel c files in openssl, and you can see this file in directory `
 
 For example, the `apps.c`, it can't identify the function between line `1151` and `3000`. 
 
-I have tried many way to fix it, but i failed. If you have some ideas, please help me.
+I have tried many ways to fix it, but i failed. If you have some ideas, please help me.
 
-**But,it can work properly at most time, don't worry.**
+**But,it can work properly at most time, don't worry. I find if you remove all the `#include` and `#define,#ifdef,#end...`，the probability of error will be smaller.**
 
 ## Referred Link
 1. https://github.com/Robin-Y-Ding/PureFunction

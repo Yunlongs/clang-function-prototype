@@ -4,6 +4,11 @@
 This will extract the AST from your source codes and **no need to compile your code!**. 
 What you need just is running a simple command line.
 
+## Features
+Now, it supports extracting the follow types of function prototypes
+- **caller-callee** relationships
+- **indirect function call** prototypes
+
 ## Environment
 - clang 10
 
@@ -23,29 +28,45 @@ Here replace `./log.file` to receive output and input file `input.c`.
 ## How to use it
 For example, there is a c file named `helloworld.c` which contains:
 ```
-#include<stdio.h>
-
-void func()
+# include <stdio.h>
+int *Max(int, int);  //函数声明
+int main(void)
 {
-	int a = 1;
-	return;
+    int* (*p)(int prt1, int ptr2);  //定义一个函数指针
+    int a, b, *c;
+    p = Max;  //把函数Max赋给指针变量p, 使p指向Max函数
+    printf("please enter a and b:");
+    scanf("%d%d", &a, &b);
+    c = (*p)(a, b);  //通过函数指针调用Max函数
+    printf("a = %d\nb = %d\nmax = %d\n", a, b, *c);
+    return 0;
 }
-
-int main()
+int *Max(int x, int y)  //定义Max函数
 {
-	printf("hello world!");
-	return 0;
+    int *z;
+    if (x > y)
+    {
+        *z = x;
+    }
+    else
+    {
+        *z = y;
+    }
+    return z;
 }
 ```
 
 
 The result are bellow:
 ```
-{'function': 'func', 'return_type': 'void', 'parms': '', 'file' :'test.c', 'begin': [3, 1], 'end': [7, 1]}
-{'function': 'main', 'return_type': 'int', 'parms': '', 'file' :'test.c', 'begin': [9, 1], 'end': [13, 1]}
-{'function': 'printf', 'return_type': 'int', 'parms': 'const char *@__format,'}
+{'function': 'main', 'return_type': 'int', 'parms': '', 'file' :'test2.c', 'begin': [3, 1], 'end': [13, 1]}
+	{'function': 'printf', 'return_type': 'int', 'params': 'const char *@__format,'}
+	{'function': 'scanf', 'return_type': 'int', 'params': 'const char *@__format,'}
+	{'function': 'printf', 'return_type': 'int', 'params': 'const char *@__format,'}
+	{'function': 'p', 'return_type': 'int *', 'params': 'int@int,int@int,'}
+{'function': 'Max', 'return_type': 'int *', 'parms': 'int@x,int@y,', 'file' :'test2.c', 'begin': [14, 1], 'end': [26, 1]}
 ```
->The error is not important, because we parse the current file's AST don't need include files. That also means you can extract function prototype with a separated file, although it include some relevant files.
+
 
         
 ## Referred Link

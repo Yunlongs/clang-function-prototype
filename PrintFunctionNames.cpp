@@ -63,6 +63,16 @@ private:
     DataDeque data_list;	///< work list using std::vector.
 };
 
+void trim(std::string &s) 
+{
+    if (s.empty()) 
+    {
+        return ;
+    }
+    s.erase(0,s.find_first_not_of(" "));
+    s.erase(s.find_last_not_of(" ") + 1);
+}
+
 namespace {
 
     class PrintFunctionsConsumer : public ASTConsumer {
@@ -79,12 +89,77 @@ namespace {
             std::ostringstream ostring;
             ostring<< "\t{'function': '" << FD->getQualifiedNameAsString() <<"'"
                     << ", 'return_type': '" << QualType(FD->getReturnType().getTypePtr()->getUnqualifiedDesugaredType(),0).getAsString() <<"'"
-                    << ", 'parms': '";
+                    << ", 'params': '";
             for (auto item : FD->parameters()){
                 ostring << QualType(item->getOriginalType().getTypePtr()->getUnqualifiedDesugaredType(), 0).getAsString()
                 << "@" << item->getNameAsString()  << ",";
             }
             ostring << "'}\n";
+            return ostring;
+        }
+
+        
+
+        std::ostringstream PrintIndirectDecl(const VarDecl *FD){
+            std::ostringstream ostring;
+            std::string funcname= FD->getNameAsString();
+            QualType type = FD->getType();
+            std::string type_string = type.getAsString();
+            std::string ret_type = "";
+            std::string params = "";
+            int i=0;
+            for(;i<type_string.length();i++)
+            {
+                if(type_string[i] == '(')
+                    break;
+                ret_type += type_string[i];
+            }
+            for(;i<type_string.length();i++)
+            {
+                if(type_string[i] == ')')
+                    break;
+            }
+            i++;
+            for(i++;i<type_string.length();i++)
+            {
+                params += type_string[i];
+            }
+
+            std::vector<std::string> param_type;
+            std::vector<std::string> param_name;
+            std::string temp;
+            for(i = 0;i < params.length(); i++)
+            {
+                
+                if(params[i] == ',' or params[i] == ')')
+                {
+                    trim(temp);
+                    param_type.push_back(temp);
+                    if(temp.find('*') != std::string::npos)
+                    {
+                        param_name.push_back("ptr");
+                    }
+                    else
+                    {
+                        param_name.push_back(temp);
+                    }
+                    temp = "";
+                    continue;
+                }
+                temp += params[i];
+            }
+
+
+            ostring<< "\t{'function': '" << funcname << "'"
+                    << ", 'return_type': '"<<ret_type<< "'"
+                    << ", 'params': '";
+            for(i = 0;i < param_type.size(); i++)
+            {
+                ostring<< param_type[i] << "@" << param_name[i] <<",";
+            }
+            ostring << "'}\n";
+
+
             return ostring;
         }
 
@@ -129,6 +204,10 @@ namespace {
                                     std::ostringstream temp_stream = PrintCalleeDecl(calleeFD);
                                     ostring << temp_stream.str();
                                 }
+                            else if(auto calleeFD = dyn_cast<VarDecl>(CD )){
+                                std::ostringstream temp_stream = PrintIndirectDecl(calleeFD);
+                                ostring << temp_stream.str();
+                            }
                         }
                         for (auto stmt : currentStmt->children())
                             if(stmt)worklist.push(stmt);

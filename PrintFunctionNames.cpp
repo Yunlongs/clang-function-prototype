@@ -73,6 +73,38 @@ void trim(std::string &s)
     s.erase(s.find_last_not_of(" ") + 1);
 }
 
+
+std::string get_last_word(const std::string s)
+{
+    std::string new_string ="";
+    if(s.find(" *") != std::string::npos)
+    {
+        int position = s.find(" *");
+        for(int i=0;i<position;i++)
+        {
+            new_string += s[i];
+        }
+
+    }
+    else{
+        new_string =s;
+    }
+    
+    if(new_string.find(' ') != std::string::npos)
+    {
+        int position = new_string.find_last_of(' ');
+        std::string temp = "";
+        for(int i=position+1; i<new_string.length();i++)
+        {
+            temp += new_string[i];
+        }
+        return temp;
+    }
+    else{
+        return new_string;
+    }
+}
+
 namespace {
 
     class PrintFunctionsConsumer : public ASTConsumer {
@@ -98,9 +130,9 @@ namespace {
             return ostring;
         }
 
-        
 
-        std::ostringstream PrintIndirectDecl(const VarDecl *FD){
+
+        template<typename T> std::ostringstream PrintIndirectDecl(const T *FD){
             std::ostringstream ostring;
             std::string funcname= FD->getNameAsString();
             QualType type = FD->getType();
@@ -135,14 +167,15 @@ namespace {
                 {
                     trim(temp);
                     param_type.push_back(temp);
-                    if(temp.find('*') != std::string::npos)
-                    {
-                        param_name.push_back("ptr");
-                    }
-                    else
-                    {
-                        param_name.push_back(temp);
-                    }
+                    //if(temp.find('*') != std::string::npos)
+                    //{
+                     //   param_name.push_back("ptr");
+                   // }
+                    //else
+                    //{
+                     //   param_name.push_back(temp);
+                    //}
+                    param_name.push_back(get_last_word(temp));
                     temp = "";
                     continue;
                 }
@@ -205,7 +238,13 @@ namespace {
                                     ostring << temp_stream.str();
                                 }
                             else if(auto calleeFD = dyn_cast<VarDecl>(CD )){
-                                std::ostringstream temp_stream = PrintIndirectDecl(calleeFD);
+                                std::ostringstream temp_stream = PrintIndirectDecl<VarDecl>(calleeFD);
+                                ostring << temp_stream.str();
+                                llvm::errs()<<"find a varDecl !";
+                            }
+                            else if(auto calleeFD = dyn_cast<ValueDecl>(CD))
+                            {
+                                std::ostringstream temp_stream = PrintIndirectDecl<ValueDecl>(calleeFD);
                                 ostring << temp_stream.str();
                             }
                         }
